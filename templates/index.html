@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics AI Tutor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        #response {
+            font-size: 1.1rem;
+            white-space: pre-wrap;
+            margin-top: 20px;
+            line-height: 1.6;
+            color: #fff;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            background-color: #333;
+            color: #fff;
+            margin-right: 10px;
+            position: relative;
+        }
+
+        #submit-button {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            background-color: #2575fc;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #submit-button:hover {
+            background-color: #6a11cb;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        .important {
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* Tooltip styling */
+        .tooltip {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            padding: 10px;
+            margin-top: 5px;
+            background-color: #333;
+            color: #fff;
+            border-radius: 5px;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.9rem;
+            width: max-content;
+            max-width: 300px;
+        }
+
+        #user-input:hover + .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Footer Styling */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .footer a {
+            color: #FFD700;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Physics AI Tutor</h1>
+        
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Ask me anything about physics—concepts, problems, or practice..." rows="4"></textarea>
+            <button id="submit-button"><i class="fas fa-search"></i> Ask</button>
+        </div>
+
+        <div class="tooltip" id="input-tooltip">
+            <strong>Example Questions:</strong><br>
+            <ul>
+                <li>What is the acceleration of a car moving at 25 m/s in 12 seconds?</li>
+                <li>Explain Newton's 2nd law in detail.</li>
+                <li>Generate a practice problem for calculating velocity from acceleration.</li>
+            </ul>
+        </div>
+
+        <div id="loading">Processing your request...</div>
+        
+        <div id="response"></div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Physics AI Tutor. All rights reserved.</p>
+        <p>For any inquiries, contact: <a href="mailto:0306ben@gmail.com">0306ben@gmail.com</a></p>
+    </div>
+
+    <script>
+        document.getElementById("submit-button").addEventListener("click", function() {
+            const userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") {
+                alert("Please enter a question or request.");
+                return;
+            }
+
+            // Show loading spinner
+            document.getElementById("loading").style.display = "block";
+
+            fetch("/get_response", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    input: userInput,
+                    mode: "question" // Adjust this as needed for other modes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ensure proper formatting is applied
+                const formattedResponse = data.response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold text
+                                                        .replace(/\\frac\{(.*?)\}\{(.*?)\}/g, '<span class="important">\\frac{$1}{$2}</span>'); // Handle fractions
+
+                document.getElementById("response").innerHTML = formattedResponse;
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, "response"]);
+                
+                // Hide loading spinner
+                document.getElementById("loading").style.display = "none";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                
+                // Hide loading spinner if error occurs
+                document.getElementById("loading").style.display = "none";
+            });
+        });
+    </script>
+</body>
+</html>
